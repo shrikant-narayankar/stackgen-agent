@@ -2,7 +2,7 @@ import os
 import requests
 from crewai.tools import tool
 
-from config import get_available_users
+from src.core.config import get_available_users
 
 def get_github_headers(user_name: str):
     users = get_available_users()
@@ -77,3 +77,21 @@ def get_assigned_issues(user_name: str) -> str:
         return f"{user_name} has {len(issue_list)} issues assigned:\n" + "\n".join(issue_list)
     except Exception as e:
         return f"Error fetching assigned issues for {user_name}: {str(e)}"
+
+@tool("Get Starred Repositories")
+def get_starred_repos(user_name: str) -> str:
+    """Useful to get starred repositories for a specific user in GitHub."""
+    try:
+        headers = get_github_headers(user_name)
+        gh_user = get_github_username(user_name)
+        url = f"https://api.github.com/users/{gh_user}/starred?per_page=10"
+        resp = requests.get(url, headers=headers)
+        resp.raise_for_status()
+        data = resp.json()
+        star_list = [f"{i+1}. {r['full_name']}" for i, r in enumerate(data)]
+        if not star_list:
+            return f"{user_name} has no starred repositories."
+        return f"{user_name} has starred {len(star_list)} repositories:\n" + "\n".join(star_list)
+    except Exception as e:
+        return f"Error fetching starred repos for {user_name}: {str(e)}"
+

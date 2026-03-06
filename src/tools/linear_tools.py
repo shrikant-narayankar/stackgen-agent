@@ -2,7 +2,7 @@ import os
 import requests
 from crewai.tools import tool
 
-from config import get_available_users
+from src.core.config import get_available_users
 
 LINEAR_GRAPHQL_URL = "https://api.linear.app/graphql"
 
