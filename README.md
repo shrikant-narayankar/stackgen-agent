@@ -4,6 +4,8 @@
 
 I have built an intelligent multi-agent orchestration system that automatically routes user requests to specialized AI agents. The system utilizes CrewAI for agent execution alongside a small local Large Language Model (`llama3.2:3b` running on Ollama) combined with the `instructor` library for deterministic intent classification. When a user submits a query, an initial routing layer analyzes the language to determine the target domain (GitHub or Linear), identifies any specific users mentioned (e.g., "Alice" or "Bob"), and manages state by requesting clarifications if the query is ambiguous.
 
+![Multi-Agent Routing Architecture](architecture-flow.drawio.png)
+
 Once the domain and users are resolved, the system instantiates either the **GitHub Expert Agent** or the **Linear Expert Agent**. These specialized agents connect to real APIs using the respective user credentials loaded via environment variables. Based on the query, they execute the appropriate tools (fetching repositories, issues, teams, or pull requests) and formulate conversational, natural language responses reflecting real-time data from the external integrations.
 
 ---
