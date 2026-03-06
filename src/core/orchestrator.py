@@ -8,6 +8,9 @@ import instructor
 from openai import OpenAI
 import contextlib
 import io
+import logging
+
+logger = logging.getLogger(__name__)
 
 @contextlib.contextmanager
 def suppress_stdout_stderr():
@@ -119,10 +122,10 @@ Rules:
             ],
             response_model=QueryClassification,
         )
-        print("✅ [Classification] LLM classification succeeded.")
+        logger.info(f"✅ [Classification] LLM classification succeeded: domain={classification.domain}, user={classification.target_user}, out_of_scope={classification.is_out_of_scope}")
     except Exception as e:
-        print(f"⚠️ [Classification] LLM classification failed: {e}")
-        print("🔄 [Classification] Falling back to keyword-based classification...")
+        logger.error(f"⚠️ [Classification] LLM classification failed: {e}")
+        logger.info("🔄 [Classification] Falling back to keyword-based classification...")
         
         # Keyword-based fallback classification
         query_lower = query.lower()
@@ -154,28 +157,28 @@ Rules:
             target_user=target_user,
             clarification_needed=clarification_needed,
         )
-        print(f"✅ [Classification] Fallback result: domain={classification.domain}, user={classification.target_user}, out_of_scope={classification.is_out_of_scope}")
+        logger.info(f"✅ [Classification] Fallback result: domain={classification.domain}, user={classification.target_user}, out_of_scope={classification.is_out_of_scope}")
 
     # Step 2: Handle special cases according to requirements
-    print(f"\n🔍 [Routing Log] Query: '{query}'")
-    print(f"🔍 [Routing Log] Domain detected by LLM: {classification.domain}")
+    logger.info(f"\n🔍 [Routing Log] Query: '{query}'")
+    logger.info(f"🔍 [Routing Log] Domain detected: {classification.domain}")
     
     if classification.is_out_of_scope:
-        print("❌ [Routing Log] Query classified as completely out of scope.")
+        logger.info("❌ [Routing Log] Query classified as completely out of scope.")
         return "I cannot answer this question"
         
-    print(f"🔍 [Routing Log] Users explicitly mentioned: {mentioned_users}")
+    logger.info(f"🔍 [Routing Log] Users explicitly mentioned: {mentioned_users}")
     if not mentioned_users:
-        print("⚠️ [Routing Log] No specific users mentioned, clarification will be needed.")
+        logger.warning("⚠️ [Routing Log] No specific users mentioned, clarification will be needed.")
         classification.target_user = None
         classification.clarification_needed = True
     elif len(mentioned_users) == 1:
-        print(f"✅ [Routing Log] Found exactly 1 mentioned user '{mentioned_users[0]}', overriding LLM target_user guess.")
+        logger.info(f"✅ [Routing Log] Found exactly 1 mentioned user '{mentioned_users[0]}', overriding LLM target_user guess.")
         classification.target_user = mentioned_users[0]
         classification.clarification_needed = False
 
     if classification.clarification_needed or not classification.target_user:
-        print("⚠️ [Routing Log] Asking user for clarification...")
+        logger.info("⚠️ [Routing Log] Asking user for clarification...")
         if "issue" in query.lower() and "github" not in query.lower():
             return f"I can help with that! Which user's issues would you like to see - {user_names_or}?"
         elif classification.domain == "github" or "pull request" in query.lower() or "repository" in query.lower():
@@ -191,14 +194,14 @@ Rules:
     
     if classification.domain == "github":
         agent = github_agent
-        print(f"🚀 [Execution Log] Routing to GitHub Agent for user '{user_name}'...")
+        logger.info(f"🚀 [Execution Log] Routing to GitHub Agent for user '{user_name}'...")
     elif classification.domain == "linear":
         agent = linear_agent
-        print(f"🚀 [Execution Log] Routing to Linear Agent for user '{user_name}'...")
+        logger.info(f"🚀 [Execution Log] Routing to Linear Agent for user '{user_name}'...")
     else:
         # Default to github if unclear
         agent = github_agent
-        print(f"🚀 [Execution Log] Domain unclear, defaulting route to GitHub Agent for user '{user_name}'...")
+        logger.info(f"🚀 [Execution Log] Domain unclear, defaulting route to GitHub Agent for user '{user_name}'...")
         
     task = Task(
         description=f"Answer this user query accurately: '{query}'. Use your tools exactly once for user '{user_name}' to get the real data. Present the data smoothly.",
@@ -225,7 +228,7 @@ Rules:
         if isinstance(parsed, dict) and "name" in parsed and "parameters" in parsed:
             tool_name = parsed["name"]
             params = parsed["parameters"]
-            print(f"🔄 [Post-Process] Agent returned raw tool call for '{tool_name}', executing manually...")
+            logger.info(f"🔄 [Post-Process] Agent returned raw tool call for '{tool_name}', executing manually...")
             
             # Map tool names to actual functions
             tool_map = {
@@ -241,9 +244,9 @@ Rules:
             if tool_name in tool_map:
                 tool_fn = tool_map[tool_name]
                 raw = tool_fn.run(**params)
-                print(f"✅ [Post-Process] Tool '{tool_name}' executed successfully.")
+                logger.info(f"✅ [Post-Process] Tool '{tool_name}' executed successfully.")
             else:
-                print(f"⚠️ [Post-Process] Unknown tool '{tool_name}', returning raw output.")
+                logger.warning(f"⚠️ [Post-Process] Unknown tool '{tool_name}', returning raw output.")
     except (json.JSONDecodeError, TypeError, KeyError):
         pass  # Not JSON, normal response — return as-is
     

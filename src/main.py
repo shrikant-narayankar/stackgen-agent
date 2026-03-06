@@ -1,5 +1,9 @@
 import sys
 import os
+import logging
+
+# Configure logging for observability
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # Ensure the project root is on sys.path so 'src' is importable
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
