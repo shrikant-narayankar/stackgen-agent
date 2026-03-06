@@ -1,0 +1,165 @@
+StackGen - AI Dev Take-Home Assessment
+Overview
+Multi-Agent System Design
+Design and implement a multi-agent system that intelligently routes queries to specialized
+agents with distinct capabilities and integrations.
+Problem Statement
+●
+Build a multi-agent orchestration system with the following architecture:
+Agent Hierarchy
+Agent A: GitHub Agent
+●
+Integration A1: GitHub User 1 (Personal Access Token for User 1)
+○
+Access: User 1's repos, issues, PRs, stars
+Integration A2: GitHub User 2 (Personal Access Token for User 2)
+○
+Access: User 2's repos, issues, PRs, stars
+Agent B: Linear Agent
+●
+Integration B1: Linear User 1 (API key for User 1)
+○
+Access: User 1's issues, projects, teams
+Integration B2: Linear User 2 (API key for User 2)
+○
+Access: User 2's issues, projects, teams
+System Requirements
+Your system must:
+1. Intelligent Routing: Analyze user queries and route to the appropriate agent (GitHub or
+Linear)
+●
+2. 3. 4. 5. Integration Selection: Each agent should automatically select the correct user
+integration (User 1 or User 2) based on the query
+Clarification Handling: When the user identity is ambiguous, ask for clarification
+○
+Example: "Show me open pull requests"
+→ should clarify which user (User 1 or
+User 2)
+○
+Example: "Show me Alice's pull requests"
+→ if Alice is User 1, use Integration A1
+Out-of-Scope Handling: For queries unrelated to GitHub or Linear, respond with: "I
+cannot answer this question"
+Response Quality: Provide meaningful responses using the selected integration with
+real user data
+Example Interactions
+Assume User 1 = "Alice" and User 2 = "Bob" for these examples:
+None
+User: "Show me Alice's open pull requests"
+System: [Routes to Agent A (GitHub) → Integration A1 (User 1)]
+Response: "Alice has 3 open pull requests:
+1. Fix auth bug in user-service (#42)
+2. Add unit tests for API endpoints (#38)
+"
+...
+User: "What issues are assigned to Bob in Linear?"
+System: [Routes to Agent B (Linear) → Integration B2 (User 2)]
+Response: "Bob has 5 issues assigned:
+- [ENG-123] Implement user authentication (In Progress)
+- [ENG-145] Fix memory leak in worker (Todo)
+"
+...
+User: "List Alice's repositories"
+System: [Routes to Agent A (GitHub) → Integration A1 (User 1)]
+Response: "Alice has 12 repositories:
+1. ml-pipeline
+2. api-gateway
+"
+...
+User: "Show me Bob's Linear issues that are in progress"
+System: [Routes to Agent B (Linear) → Integration B2 (User 2)]
+Response: "Bob has 2 issues in progress:
+- [ENG-189] Refactor authentication module
+- [ENG-201] Update API documentation
+"
+...
+User: "Show me open pull requests"
+System: [Routes to Agent A (GitHub) → Clarification needed]
+Response: "I can help with that! Which user's pull requests would you like to see - Alice's
+or Bob's?"
+User: "What issues are high priority?"
+System: [Routes to Agent B (Linear) → Clarification needed]
+Response: "I can help with that! Which user's issues would you like to see - Alice's or
+Bob's?"
+User: "What's the weather today?"
+System: [Out of scope]
+Response: "I cannot answer this question"
+API Setup Guide (for candidates)
+You'll need to set up credentials for 2 different users for both GitHub and Linear. Feel free to
+create dummy accounts. Linear can be a single org with both users as members:
+GitHub API - User 1
+Shell
+export GITHUB
+export GITHUB
+TOKEN
+_
+_
+USER1="ghp_
+user1
+token
+_
+_
+USERNAME
+USER1="username-1"
+here"
+_
+_
+GitHub API - User 2
+Shell
+export GITHUB
+export GITHUB
+TOKEN
+_
+_
+USER2="ghp_
+user2
+token
+_
+_
+USERNAME
+USER2="username-2"
+here"
+_
+_
+Linear API - User 1
+Shell
+export LINEAR
+export LINEAR
+API
+KEY
+_
+_
+_
+USERNAME
+_
+_
+USER1="lin
+_
+api
+user1
+_
+_
+key_
+here"
+USER1="username-1"
+Linear API - User 2
+Shell
+export LINEAR
+API
+KEY
+_
+_
+_
+export LINEAR
+USERNAME
+_
+_
+USER2="lin
+_
+api
+user2
+_
+_
+key_
+here"
+USER2="username-2"
