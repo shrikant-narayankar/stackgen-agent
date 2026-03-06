@@ -29,14 +29,21 @@ load_dotenv(env_path)
 
 os.environ["CREWAI_TELEMETRY_OPT_OUT"] = "true"
 
-# Set up Ollama with Instructor for routing
-client = instructor.from_openai(
-    OpenAI(
-        base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434") + "/v1",
-        api_key="ollama",  # required, but unused
-    ),
-    mode=instructor.Mode.JSON,
-)
+use_openai = bool(os.getenv("OPENAI_API_KEY"))
+
+# Set up LLM clients (OpenAI or Ollama)
+if use_openai:
+    client = instructor.from_openai(OpenAI())
+    routing_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+else:
+    client = instructor.from_openai(
+        OpenAI(
+            base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434") + "/v1",
+            api_key="ollama",  # required, but unused
+        ),
+        mode=instructor.Mode.JSON,
+    )
+    routing_model = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
 
 class QueryClassification(BaseModel):
     is_out_of_scope: bool
@@ -45,10 +52,13 @@ class QueryClassification(BaseModel):
     clarification_needed: bool
 
 # Set up CrewAI LLM
-crewai_llm = LLM(
-    model="ollama/" + os.getenv("OLLAMA_MODEL", "llama3.2:3b"),
-    base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-)
+if use_openai:
+    crewai_llm = LLM(model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"))
+else:
+    crewai_llm = LLM(
+        model="ollama/" + os.getenv("OLLAMA_MODEL", "llama3.2:3b"),
+        base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    )
 
 github_agent = Agent(
     role="GitHub Expert",
@@ -102,7 +112,7 @@ Rules:
 - If the query mentions 'issues', 'repos', 'pull requests', 'linear', or 'github', it is NOT out of scope."""
 
         classification = client.chat.completions.create(
-            model=os.getenv("OLLAMA_MODEL", "llama3.2:3b"),
+            model=routing_model,
             messages=[
                 {"role": "system", "content": sys_prompt},
                 {"role": "user", "content": query},
