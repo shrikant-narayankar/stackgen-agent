@@ -1,4 +1,9 @@
 import sys
+import os
+
+# Ensure the project root is on sys.path so 'src' is importable
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from src.core.orchestrator import process_query
 
 def main():

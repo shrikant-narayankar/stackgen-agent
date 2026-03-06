@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+.git/
+.gitignore
+*.md
+ai-agent
+.DS_Store
